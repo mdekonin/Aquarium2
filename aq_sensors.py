@@ -18,16 +18,20 @@
 import time
 from datetime import datetime
 from w1thermsensor import W1ThermSensor, Sensor, Unit
+import syslog
 
 def get_Temp():
     for sensor in W1ThermSensor.get_available_sensors([Sensor.DS18B20]):
-      print(datetime.now(), sensor.id, sensor.get_temperature()," degrees C")
+      print(datetime.now(), sensor.id, sensor.get_temperature(),"degrees C")
+      syslog.syslog(str(datetime.now()) + " " + str(sensor.id) + " " + str(sensor.get_temperature()) + "degrees C")
     return()
 
 def get_pH():
     return()
 
 if __name__ == '__main__':
+    syslog.openlog(logoption=syslog.LOG_PID)
+    syslog.syslog("Temperature logging started ...")
     try :
         while True:
             get_Temp()
