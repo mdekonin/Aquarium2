@@ -1,0 +1,12 @@
+[Unit]
+Description=Aquarium Controller
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/pi/aquarium2/2.02/aq_main.py
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
+
