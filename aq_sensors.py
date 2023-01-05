@@ -8,22 +8,37 @@
 #     Using PyPI library W1ThermSensor availabe here https://pypi.org/project/w1thermsensor/
 #
 # Phase 1. DS18B20
-#
-#from collections import deque
-#from decimal import Decimal
-#import aq_global as g
+# Phase 2. add MQTT client code to publish results
 
-
-
+import paho.mqtt.client as mqttClient
 import time
 from datetime import datetime
 from w1thermsensor import W1ThermSensor, Sensor, Unit
 import syslog
 
-def get_Temp():
+MQTT_broker = "192.168.1.241"
+MQTT_port = 1883
+MQTT_topic = "Temperature"
+INTERVAL = 300
+
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Connected to broker")
+        global Connected                #Use global variable
+        Connected = True                #Signal connection 
+    else:
+        print("Connection failed")
+
+def get_Temp(client):
     for sensor in W1ThermSensor.get_available_sensors([Sensor.DS18B20]):
-      print(datetime.now(), sensor.id, sensor.get_temperature(),"degrees C")
-      syslog.syslog(str(datetime.now()) + " " + str(sensor.id) + " " + str(sensor.get_temperature()) + "degrees C")
+        tempC = sensor.get_temperature()
+        tag1 = "sensor_id=" + str(sensor.id)
+        tag2 = "sensor_type=DS18B20"
+        value = str(tempC)
+        msg = str(datetime.now()) + "," + tag1 + "," + tag2 + "," + value
+        print(msg)
+        syslog.syslog(msg)
+        client.publish(MQTT_topic, msg)
     return()
 
 def get_pH():
@@ -32,10 +47,26 @@ def get_pH():
 if __name__ == '__main__':
     syslog.openlog(logoption=syslog.LOG_PID)
     syslog.syslog("Temperature logging started ...")
+    Connected = False                                   #global variable for the state of the connection
+    broker_address= MQTT_broker
+    port = MQTT_port
+    #user = "yourUser"
+    #password = "yourPassword"
+    
+    client = mqttClient.Client()                        #create new instance
+    #client.username_pw_set(user, password=password)    #set username and password
+    client.on_connect= on_connect                      #attach function to callback
+    client.connect(broker_address, port=port)          #connect to broker
+    client.loop_start()                                #start the loop
+    
+    while Connected != True:    #Wait for connection
+        time.sleep(0.1)
     try :
         while True:
-            get_Temp()
+            get_Temp(client)
             get_pH()
-            time.sleep(300)
+            time.sleep(INTERVAL)
     except KeyboardInterrupt:
-        pass
+        print("Terminating connection to MQTT broker")
+        client.disconnect()
+        client.loop_stop()

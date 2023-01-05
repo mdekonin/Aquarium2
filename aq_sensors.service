@@ -1,10 +1,10 @@
 [Unit]
-Description=Aquarium Sensors - flask web server
+Description=Aquarium Sensors - MQTT publisher
 After=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /home/pi/aquarium2/2.02_flask/app_aq_sensors.py
+ExecStart=/usr/bin/python3 /home/pi/aquarium2/2.02/aq_sensors.py
 Restart=on-abort
 
 [Install]
