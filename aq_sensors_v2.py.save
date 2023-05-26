@@ -35,7 +35,7 @@ def on_connect(client, userdata, flags, rc):
 def get_Temp(client):
     for sensor in W1ThermSensor.get_available_sensors([Sensor.DS18B20]):
         tempC = sensor.get_temperature()
-        msg_payload = {"timestamp" : str(datetime.now()), "sensor_id" : sensor.id, "sensor_type" : "DS18B20", "temp_C" : tempC}
+        msg_payload = {"sensor_id" : sensor.id, "sensor_type" : "DS18B20", "temp_C" : tempC}
         msg_json = json.dumps(msg_payload)
         syslog.syslog(msg_json)
         client.publish(MQTT_topic, msg_json)
@@ -59,10 +59,10 @@ if __name__ == '__main__':
     client.connect(broker_address, port=port)          #connect to broker
     client.loop_start()                                #start the loop
     
-    while Connected != True:    #Wait for connection
+    while not Connected:    #Wait for connection
         time.sleep(0.1)
     try :
-        while True:
+        while Connected:
             get_Temp(client)
             get_pH()
             time.sleep(INTERVAL)
