@@ -9,6 +9,7 @@
 #
 # Phase 1. DS18B20
 # Phase 2. add MQTT client code to publish results
+# trying to get conection to Domo.com working with certificate
 
 import paho.mqtt.client as mqttClient
 import time
